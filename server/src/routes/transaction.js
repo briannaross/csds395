@@ -30,3 +30,24 @@ router.get("/:userId", (req, res) => {
         }
     );
 });
+
+/**
+ * Creates a new transaction from the form
+ * @route POST /
+ * @access Private
+ */
+router.post("/", (req, res) => {
+    const { userId, date, category, type, amount, notes } = req.body;
+
+    db.query(
+        `INSERT INTO transactions (userID, date, category, type, amount, notes)
+        VALUES (?, ?, ?, ?, ?, ?)`,
+            [userId, date, category, type, amount, notes],
+            (err) => {
+                if (err) return res.status(500).json({ error: err });
+                res.json({ message: "Transaction Recorded!" });
+            }
+    );
+});
+
+module.exports = router;
