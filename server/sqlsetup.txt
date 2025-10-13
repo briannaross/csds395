@@ -1,0 +1,31 @@
+CREATE DATABASE budget
+
+CREATE TABLE users (
+    userID INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    dateJoined DATE NOT NULL,
+    personalFunds DECIMAL
+);
+
+CREATE TABLE transactions (
+    transactionID INT AUTO_INCREMENT PRIMARY KEY,
+    userID INTEGER NOT NULL,
+    date DATE NOT NULL,
+    category VARCHAR(255) NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    amount DECIMAL,
+    notes VARCHAR(255),
+    FOREIGN KEY (userID) REFERENCES users(userID) ON DELETE CASCADE,
+    check(type in ('Expense', 'Income'))
+);
+
+CREATE TABLE spending (
+    reportID INT AUTO_INCREMENT PRIMARY KEY,
+    userID INTEGER NOT NULL,
+    startDate DATE NOT NULL,
+    endDate DATE NOT NULL,
+    amount DECIMAL,
+    FOREIGN KEY (userID) REFERENCES users(userID) ON DELETE CASCADE
+)
