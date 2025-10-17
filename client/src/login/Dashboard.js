@@ -2,6 +2,19 @@ import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { BudgetContext } from "../context/BudgetContext";
 import "./dashboard.css";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  LineElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
+
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -31,9 +44,31 @@ function Dashboard() {
 
           <div className="chart-panel">
             <h2>Weekly Spending Trend</h2>
-            <div className="chart-placeholder">
-              [Will connect/create once SQL code is done]
-            </div>
+  {transactions.length === 0 ? (
+    <p className="no-data">No data yet.</p>
+  ) : (
+    <Line
+      data={{
+        labels: transactions.slice(-7).map((t) => t.date),
+        datasets: [
+          {
+            label: "Spending ($)",
+            data: transactions.slice(-7).map((t) =>
+              t.type === "Expense" ? t.amount : 0
+            ),
+            borderColor: "#244b9b",
+            backgroundColor: "rgba(36, 75, 155, 0.2)",
+            fill: true,
+          },
+        ],
+      }}
+      options={{
+        responsive: true,
+        scales: { y: { beginAtZero: true } },
+      }}
+    />
+  )}
+
           </div>
 
           <div className="table-panel">
