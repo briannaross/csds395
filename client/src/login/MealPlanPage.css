@@ -1,128 +1,118 @@
-.mealplan-page {
-  width: 100vw;
+.meal-page {
+  background: #f4f7fc;
   min-height: 100vh;
-  background: #f4f7fb;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  font-family: "Inter", sans-serif;
+  width: 100%;
 }
 
 .meal-header {
-  background-color: #24449b;
+  background-color: #244b9b;
   color: white;
   width: 100%;
-  padding: 1.8rem 3rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 1.5rem 3rem;
   box-sizing: border-box;
 }
 
 .meal-header h1 {
-  margin: 0;
   font-size: 1.8rem;
   font-weight: 700;
+  margin: 0;
 }
 
-.back-dashboard-btn {
+.back-dashboard {
   background: white;
-  color: #24449b;
+  color: #244b9b;
+  padding: 0.6rem 1rem;
   border: none;
-  padding: 0.5rem 1.2rem;
   border-radius: 6px;
-  cursor: pointer;
   font-weight: 600;
-}
-
-.back-dashboard-btn:hover {
-  background: #eef1f7;
+  cursor: pointer;
 }
 
 .meal-content {
+  margin-top: 3rem;
   display: flex;
   justify-content: center;
   gap: 3rem;
-  padding: 3rem;
+  width: 100%;
 }
 
-.meal-card {
+.add-swipe-card {
   width: 420px;
   background: white;
   padding: 2rem;
-  border-radius: 14px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
-.meal-card h2 {
-  font-weight: 700;
-  margin-bottom: 1rem;
-  font-size: 1.3rem;
+.add-swipe-card h2 {
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
 }
 
-.weekly-count {
+.weekly-counter {
   font-weight: 600;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.2rem;
 }
 
-.input-box {
+.add-swipe-card select,
+.add-swipe-card input {
   width: 100%;
-  padding: 0.8rem;
-  border: 1px solid #cfd3dc;
-  border-radius: 6px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
   margin-bottom: 1rem;
-  font-size: 0.95rem;
+  font-size: 15px;
 }
 
-.add-btn {
+.add-swipe-btn {
   width: 100%;
-  background: #24449b;
+  background-color: #244b9b;
   color: white;
-  padding: 0.9rem;
+  padding: 12px;
+  font-weight: 600;
   border: none;
-  border-radius: 6px;
-  font-weight: 700;
+  border-radius: 8px;
   cursor: pointer;
 }
 
-.add-btn:hover {
-  background: #1d3884;
+.add-swipe-btn:hover {
+  background-color: #1e3f83;
 }
 
 .history-card {
-  width: 540px;
+  width: 520px;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.history-card h2 {
+  margin-bottom: 1rem;
+}
+
+.history-table-container {
+  max-height: 380px;
+  overflow-y: auto;
+  border-radius: 8px;
 }
 
 .history-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
+  border-collapse: collapse;
 }
 
-.history-table thead th {
-  background-color: #eef2f7;
-  padding: 14px 18px;
+.history-table th {
+  background: #eef2f6;
   font-weight: 700;
-  font-size: 0.95rem;
-  color: #333;
+  padding: 12px;
   text-align: left;
-  border-bottom: 1px solid #d9dce1;
 }
 
-.history-table tbody td {
-  padding: 14px 18px;
-  font-size: 0.93rem;
-  color: #444;
+.history-table td {
+  padding: 12px;
   border-bottom: 1px solid #e5e7eb;
-}
-
-.history-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.history-table tbody tr:hover {
-  background-color: #f9fafc;
 }
