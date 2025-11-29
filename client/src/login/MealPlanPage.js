@@ -54,6 +54,8 @@ function MealSwipe() {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           >
+
+            //need to add the full meal plan places list
             <option value="">Select Location</option>
             <option value="Fribley">Fribley</option>
             <option value="Leutner">Leutner</option>
