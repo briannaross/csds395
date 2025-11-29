@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MealPlanContext } from "../context/MealPlanContext";
-import "./mealPlanPage.css";
+import "./MealPlanPage.css";
 
 const MealPlanPage = () => {
   const navigate = useNavigate();
