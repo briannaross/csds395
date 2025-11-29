@@ -1,6 +1,6 @@
 package com.cwru.budgetbot;
 
-public class BudgetBotResponder {
+public class BudgetBotApplication {
 
     public static class ResponseBundle {
         public final String yes;
