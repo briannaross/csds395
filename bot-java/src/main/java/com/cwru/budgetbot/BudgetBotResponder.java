@@ -11,8 +11,6 @@ public class BudgetBotResponder {
         }
     }
 
-    // Simple “buckets” for recommendation lists.
-    // These names are chosen to match your MerchantLexicon entries.
     private static final String[] DINING_HALLS = {
             "Dining Hall", "North Dining Hall", "South Dining Hall"
     };
@@ -42,21 +40,21 @@ public class BudgetBotResponder {
             case CAN_I_BUY: {
                 String yes = isSwipe
                         ? "✅ YES: Using a meal swipe at " + merchant + " looks fine. " +
-                        "Just keep an eye on your weekly swipe limits so you don’t run out before the week resets."
+                          "Just keep an eye on your weekly swipe limits so you don’t run out before the week resets."
                         : "✅ YES: " + capFirst(merchant) + " for " + amountPhrase + " looks okay. " +
-                        "Paying with " + sourcePhrase + " should be fine if your overall weekly spending pace is reasonable.";
+                          "Paying with " + sourcePhrase + " should be fine if your overall weekly spending pace is reasonable.";
 
                 String caution = isSwipe
                         ? "⚠️ CAUTION: A swipe at " + merchant + " might be okay, but it depends on how many swipes " +
-                        "you’ve already used this week. If you’re close to the cap, consider saving this swipe for later."
+                          "you’ve already used this week. If you’re close to the cap, consider saving this swipe for later."
                         : "⚠️ CAUTION: Buying at " + merchant + " for " + amountPhrase +
-                        " could push you over your pacing target. If you go ahead, try balancing it by skipping a small treat later.";
+                          " could push you over your pacing target. If you go ahead, try balancing it by skipping a small treat later.";
 
                 String no = isSwipe
                         ? "⛔ NO: I’d skip a swipe at " + merchant + " right now. " +
-                        "If you’re running low on weekly or daily swipes, saving this one can help you avoid running out early."
+                          "If you’re running low on weekly or daily swipes, saving this one can help you avoid running out early."
                         : "⛔ NO: I’d pass on " + merchant + " for " + amountPhrase + " today. " +
-                        "Given typical budgeting guidelines, this risks eating into your buffer. Consider a cheaper option or wait a bit.";
+                          "Given typical budgeting guidelines, this risks eating into your buffer. Consider a cheaper option or wait a bit.";
 
                 return new ResponseBundle(yes, caution, no);
             }
@@ -64,28 +62,25 @@ public class BudgetBotResponder {
             case HOW_AM_I_DOING: {
                 return new ResponseBundle(
                         "✅ If your weekly spending is below your target and you still have a buffer, you’re likely on pace. " +
-                                "You can probably afford a small treat without throwing things off.",
+                        "You can probably afford a small treat without throwing things off.",
                         "⚠️ You might be close to your target. It’s worth reviewing this week’s non-essential purchases and trimming one or two.",
                         "⛔ You’re probably over your safe pace. Pausing extras for a few days can help you reset before the next week starts."
                 );
             }
 
             case RECS: {
-                // YES: user is doing well → more freedom: mix of treats, mid meals, and decent groceries
                 String yes = "✅ If your budget is in good shape, here are some options:\n" +
                         " • Treats & coffee: " + joinList(TREATS_AND_COFFEE) + "\n" +
                         " • Regular meals out: " + joinList(MID_MEALS) + "\n" +
                         " • Groceries to stock up: " + joinList(MID_GROCERIES) + "\n" +
                         "You can mix a small number of treats with normal meals and a grocery run to stay on track.";
 
-                // CAUTION: user is borderline → mostly mid/cheap: dining hall, mid meals, cheaper groceries
                 String caution = "⚠️ If your budget is a bit tight, focus on lower-cost choices:\n" +
                         " • Most meals from: " + joinList(DINING_HALLS) + "\n" +
                         " • Occasional meals out: " + joinList(MID_MEALS) + "\n" +
                         " • Budget-conscious groceries: " + joinList(CHEAP_GROCERIES) + " or " + joinList(MID_GROCERIES) + "\n" +
                         "Try using dining halls or groceries for most meals and save restaurants for once in a while.";
 
-                // NO: user doing poorly → very frugal: dining halls + cheapest groceries
                 String no = "⛔ If your budget is in a rough spot, I’d stick to the cheapest options for now:\n" +
                         " • Primary meals: " + joinList(DINING_HALLS) + "\n" +
                         " • Groceries: " + joinList(CHEAP_GROCERIES) + "\n" +
@@ -97,12 +92,23 @@ public class BudgetBotResponder {
             default: {
                 return new ResponseBundle(
                         "✅ If this is a purchase or food question, it may be fine depending on amount and source. " +
-                                "Try asking more specifically, like: “can I buy Starbucks for $6 with CaseCash?” or “where should I eat on a tight budget?”",
+                        "Try asking more specifically, like: “can I buy Starbucks for $6 with CaseCash?” or “where should I eat on a tight budget?”",
                         "⚠️ I can give you better advice if you share a merchant and approximate cost, or ask for recommendations directly.",
                         "⛔ I don’t have enough details to judge this decision. Tell me where you’re going and roughly how much you plan to spend, " +
-                                "or ask for recommendations based on your budget."
+                        "or ask for recommendations based on your budget."
                 );
             }
+        }
+    }
+
+    /** Pick one of the three strings based on Decision. */
+    public String pickResponse(PurchaseQuery q, Decision decision) {
+        ResponseBundle bundle = draftResponses(q);
+        switch (decision) {
+            case YES:      return bundle.yes;
+            case CAUTION:  return bundle.caution;
+            case NO:       return bundle.no;
+            default:       return bundle.caution;
         }
     }
 
@@ -142,4 +148,3 @@ public class BudgetBotResponder {
         return sb.toString();
     }
 }
-
