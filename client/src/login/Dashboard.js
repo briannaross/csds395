@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { BudgetContext } from "../context/BudgetContext";
+import { MealPlanContext } from "../context/MealPlanContext";
 import "./dashboard.css";
 import { Line } from "react-chartjs-2";
 import {
@@ -18,6 +19,7 @@ ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip,
 function Dashboard() {
   const navigate = useNavigate();
   const { transactions, balances, caseCashEntries = [] } = useContext(BudgetContext);
+  const { swipesUsed, weeklyLimit } = useContext(MealPlanContext);
 
   // Calculate total CaseCash spent
   const totalCaseCashSpent = caseCashEntries.reduce((sum, entry) => {
@@ -40,6 +42,9 @@ function Dashboard() {
           </div>
           <div className="balance-card personal">
             Personal Funds: <strong>${balances.personalFunds.toFixed(2)}</strong>
+          </div>
+          <div className="balance-card meal-swipes">
+            Meal Swipes: <strong>{swipesUsed} / {weeklyLimit}</strong>
           </div>
         </div>
 
@@ -120,6 +125,12 @@ function Dashboard() {
               onClick={() => navigate("/casecash")}
             >
               View CaseCash History
+            </button>
+            <button
+              className="view-more-btn"
+              onClick={() => navigate("/meal-plan")}
+            >
+              View Meal Plan
             </button>
           </div>
         </div>
