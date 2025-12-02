@@ -33,7 +33,14 @@ public class IntentParser {
 
     public PurchaseQuery parse(String input) {
         if (input == null || input.isBlank()) {
-            return new PurchaseQuery(IntentType.UNKNOWN, "Unknown", null, SourceType.UNKNOWN, "");
+            return new PurchaseQuery(
+                    IntentType.UNKNOWN,
+                    "Unknown",
+                    null,
+                    SourceType.UNKNOWN,
+                    "",
+                    false
+            );
         }
         String text = input.trim();
         String lower = text.toLowerCase(Locale.ROOT);
@@ -48,53 +55,52 @@ public class IntentParser {
         // 3) amount
         Double amount = money.extractAmount(text);
 
-        // 4) source inference (MEAL_SWIPE, CASE_CASH, PERSONAL, UNKNOWN)
+        // 4) source inference
         SourceType source = SourceType.UNKNOWN;
 
-        // (a) Explicit swipe mention → MEAL_SWIPE
         boolean mentionsSwipe = swipe.mentionsSwipe(text);
         if (mentionsSwipe) {
             source = SourceType.MEAL_SWIPE;
         }
 
-        // (b) Dining Hall always uses swipes
         if (source != SourceType.MEAL_SWIPE && match.map(m -> m.entry.isDiningHall()).orElse(false)) {
             source = SourceType.MEAL_SWIPE;
         }
 
-        // (c) Explicit hints for money sources if not already MEAL_SWIPE
         if (source != SourceType.MEAL_SWIPE) {
             if (lower.contains("case cash") || lower.contains("casecash") || lower.contains("on campus")) {
                 source = SourceType.CASE_CASH;
-            } else if (lower.contains("personal") || lower.contains("credit") || lower.contains("debit") || lower.contains("my card")) {
+            } else if (lower.contains("personal") || lower.contains("credit")
+                    || lower.contains("debit") || lower.contains("my card")) {
                 source = SourceType.PERSONAL;
             } else if (match.map(m -> m.entry.onCampus()).orElse(false)) {
-                // default for generic on-campus when nothing else is stated
                 source = SourceType.CASE_CASH;
             }
         }
 
-        // 5) upgrade UNKNOWN intent to CAN_I_BUY if it looks like a purchase
+        // 5) cheap preference flag (for cheap recs)
+        boolean cheapPreference = detectCheapPreference(lower);
+
+        // 6) upgrade UNKNOWN intent to CAN_I_BUY if it still looks like a purchase
         if (intent == IntentType.UNKNOWN && (match.isPresent() || amount != null || mentionsSwipe)) {
             intent = IntentType.CAN_I_BUY;
         }
 
-        return new PurchaseQuery(intent, merchant, amount, source, text);
+        return new PurchaseQuery(intent, merchant, amount, source, text, cheapPreference);
     }
 
     private IntentType detectIntent(String lower) {
-        // RECS has priority over other explicit patterns
+        // RECS first so "where can I get groceries?" isn't treated as CAN_I_BUY
         if (RECS.matcher(lower).find()) return IntentType.RECS;
         if (HOW_AM_I_DOING.matcher(lower).find()) return IntentType.HOW_AM_I_DOING;
         if (CAN_I_BUY.matcher(lower).find()) return IntentType.CAN_I_BUY;
 
-        // 🔽 Heuristic fallback for “I want to get food somewhere cheap” style questions
+        // heuristic fallback: generic food questions
         if (looksLikeFoodRecs(lower)) return IntentType.RECS;
 
         return IntentType.UNKNOWN;
     }
 
-    /** Heuristic: generic food questions with “somewhere/cheap” → RECS. */
     private boolean looksLikeFoodRecs(String lower) {
         boolean hasFoodWord =
                 lower.contains("food")
@@ -116,12 +122,21 @@ public class IntentParser {
                 lower.contains("cheap")
                         || lower.contains("affordable")
                         || lower.contains("on a budget")
-                        || lower.contains("not too expensive");
+                        || lower.contains("not too expensive")
+                        || lower.contains("broke");
 
-        // Examples caught by this:
-        // "i want to get food somewhere cheap"
-        // "i need a cheap place to eat"
-        // "anywhere affordable for food?"
         return hasFoodWord && (hasLocationish || hasBudgetWord);
+    }
+
+    /** Detects when the user is explicitly asking for cheap/affordable options. */
+    private boolean detectCheapPreference(String lower) {
+        return lower.contains("cheap")
+                || lower.contains("affordable")
+                || lower.contains("on a budget")
+                || lower.contains("broke")
+                || lower.contains("not too expensive")
+                || lower.contains("low cost")
+                || lower.contains("budget friendly")
+                || lower.contains("inexpensive");
     }
 }
