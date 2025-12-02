@@ -39,64 +39,58 @@ public class BudgetBotResponder {
         switch (q.getIntent()) {
             case CAN_I_BUY: {
                 String yes = isSwipe
-                        ? "✅ YES: Using a meal swipe at " + merchant + " looks fine. " +
-                          "Just keep an eye on your weekly swipe limits so you don’t run out before the week resets."
-                        : "✅ YES: " + capFirst(merchant) + " for " + amountPhrase + " looks okay. " +
-                          "Paying with " + sourcePhrase + " should be fine if your overall weekly spending pace is reasonable.";
+                        ? "✅ YES: Using a meal swipe at " + merchant + " fits comfortably into your current usage this week."
+                        : "✅ YES: " + capFirst(merchant) + " for " + amountPhrase + " fits within your current weekly budget pace.";
 
                 String caution = isSwipe
-                        ? "⚠️ CAUTION: A swipe at " + merchant + " might be okay, but it depends on how many swipes " +
-                          "you’ve already used this week. If you’re close to the cap, consider saving this swipe for later."
-                        : "⚠️ CAUTION: Buying at " + merchant + " for " + amountPhrase +
-                          " could push you over your pacing target. If you go ahead, try balancing it by skipping a small treat later.";
+                        ? "⚠️ CAUTION: A swipe at " + merchant + " might be okay, but you’re getting closer to your weekly swipe limit. Use it only if this meal matters more than a later one."
+                        : "⚠️ CAUTION: " + amountPhrase + " at " + merchant +
+                          " is doable, but it puts pressure on the rest of your week. If you go ahead, try to cut back slightly on other non-essentials.";
 
                 String no = isSwipe
-                        ? "⛔ NO: I’d skip a swipe at " + merchant + " right now. " +
-                          "If you’re running low on weekly or daily swipes, saving this one can help you avoid running out early."
-                        : "⛔ NO: I’d pass on " + merchant + " for " + amountPhrase + " today. " +
-                          "Given typical budgeting guidelines, this risks eating into your buffer. Consider a cheaper option or wait a bit.";
+                        ? "⛔ NO: You’re too close to using up your swipes for the week. It’s safer to save this swipe for a more important meal."
+                        : "⛔ NO: " + amountPhrase + " at " + merchant +
+                          " would push you past a realistic weekly spending level. Choosing a cheaper option or waiting until next week is safer.";
 
                 return new ResponseBundle(yes, caution, no);
             }
 
             case HOW_AM_I_DOING: {
-                return new ResponseBundle(
-                        "✅ If your weekly spending is below your target and you still have a buffer, you’re likely on pace. " +
-                        "You can probably afford a small treat without throwing things off.",
-                        "⚠️ You might be close to your target. It’s worth reviewing this week’s non-essential purchases and trimming one or two.",
-                        "⛔ You’re probably over your safe pace. Pausing extras for a few days can help you reset before the next week starts."
-                );
+                // More direct, no “if” hedging
+                String yes = "✅ You’re on track with your budget this week. At your current pace, you can afford a small extra purchase without hurting your goals.";
+                String caution = "⚠️ You’re getting close to the edge of your weekly budget. New non-essential spending is possible, but you should keep it small and selective.";
+                String no = "⛔ You’ve effectively used up this week’s budget. It’s best to pause extra spending until the new week starts and let your budget reset.";
+
+                return new ResponseBundle(yes, caution, no);
             }
 
             case RECS: {
-                String yes = "✅ If your budget is in good shape, here are some options:\n" +
+                String yes = "✅ You’re in a comfortable spot this week. Here are good options:\n" +
                         " • Treats & coffee: " + joinList(TREATS_AND_COFFEE) + "\n" +
                         " • Regular meals out: " + joinList(MID_MEALS) + "\n" +
                         " • Groceries to stock up: " + joinList(MID_GROCERIES) + "\n" +
-                        "You can mix a small number of treats with normal meals and a grocery run to stay on track.";
+                        "Mixing a treat or two with normal meals and a grocery run keeps you on pace.";
 
-                String caution = "⚠️ If your budget is a bit tight, focus on lower-cost choices:\n" +
+                String caution = "⚠️ Your budget is tight but manageable. Safer choices right now are:\n" +
                         " • Most meals from: " + joinList(DINING_HALLS) + "\n" +
                         " • Occasional meals out: " + joinList(MID_MEALS) + "\n" +
-                        " • Budget-conscious groceries: " + joinList(CHEAP_GROCERIES) + " or " + joinList(MID_GROCERIES) + "\n" +
-                        "Try using dining halls or groceries for most meals and save restaurants for once in a while.";
+                        " • Budget-friendly groceries: " + joinList(CHEAP_GROCERIES) + " or " + joinList(MID_GROCERIES) + "\n" +
+                        "Lean on dining halls and groceries for most meals and treat restaurant trips as occasional.";
 
-                String no = "⛔ If your budget is in a rough spot, I’d stick to the cheapest options for now:\n" +
+                String no = "⛔ Your budget is under real pressure this week. Best options are:\n" +
                         " • Primary meals: " + joinList(DINING_HALLS) + "\n" +
                         " • Groceries: " + joinList(CHEAP_GROCERIES) + "\n" +
-                        "Focus on dining halls and basic groceries until your spending pace improves; then you can reintroduce treats and restaurants.";
+                        "Stick to dining halls and basic groceries until your weekly spending resets, then reintroduce extras.";
 
                 return new ResponseBundle(yes, caution, no);
             }
 
             default: {
-                return new ResponseBundle(
-                        "✅ If this is a purchase or food question, it may be fine depending on amount and source. " +
-                        "Try asking more specifically, like: “can I buy Starbucks for $6 with CaseCash?” or “where should I eat on a tight budget?”",
-                        "⚠️ I can give you better advice if you share a merchant and approximate cost, or ask for recommendations directly.",
-                        "⛔ I don’t have enough details to judge this decision. Tell me where you’re going and roughly how much you plan to spend, " +
-                        "or ask for recommendations based on your budget."
-                );
+                String yes = "✅ This looks manageable based on a typical student budget. For more precise advice, mention where you’re going and roughly how much you’ll spend.";
+                String caution = "⚠️ I can give a clearer answer if you share the place and approximate cost, or ask how you’re doing on your budget this week.";
+                String no = "⛔ I don’t have enough details to judge this. Tell me the location, an approximate price, or ask for recommendations based on your budget.";
+
+                return new ResponseBundle(yes, caution, no);
             }
         }
     }
