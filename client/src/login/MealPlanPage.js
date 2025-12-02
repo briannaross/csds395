@@ -5,23 +5,48 @@ import "./MealPlanPage.css";
 
 const MealPlanPage = () => {
   const navigate = useNavigate();
-  const { weeklyLimit, swipesUsed, swipeHistory, addSwipe } =
+  const { weeklyLimit, swipesUsed, swipeHistory, addSwipe, editSwipe, deleteSwipe } =
     useContext(MealPlanContext);
 
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
+  const [editIndex, setEditIndex] = useState(null);
+  const [editMode, setEditMode] = useState(false);
 
   const handleAddSwipe = () => {
     if (!location) return alert("Please select a location");
-    addSwipe(location, notes);
+
+    if (editIndex !== null) {
+      editSwipe(editIndex, location, notes);
+      setEditIndex(null);
+      setEditMode(false);
+    } else {
+      addSwipe(location, notes);
+    }
+
     setLocation("");
     setNotes("");
   };
 
+  const beginEdit = (index) => {
+    if (!editMode) return;
+    setEditIndex(index);
+    const entry = swipeHistory[index];
+    setLocation(entry.location);
+    setNotes(entry.notes === "-" ? "" : entry.notes);
+  };
+
+  const handleDelete = () => {
+    if (editIndex === null) return;
+    deleteSwipe(editIndex);
+    setEditIndex(null);
+    setLocation("");
+    setNotes("");
+    setEditMode(false);
+  };
+
   return (
     <div className="meal-page">
-
-      {/* HEADER */}
       <div className="meal-header">
         <h1>Meal Swipes</h1>
         <button className="back-dashboard" onClick={() => navigate("/dashboard")}>
@@ -29,20 +54,14 @@ const MealPlanPage = () => {
         </button>
       </div>
 
-      {/* MAIN CONTENT */}
       <div className="meal-content">
-
-        {/* LEFT CARD */}
         <div className="add-swipe-card">
-          <h2>Add a Meal Swipe</h2>
+          <h2>{editIndex !== null ? "Edit Swipe" : "Add a Meal Swipe"}</h2>
           <p className="weekly-counter">
             Weekly Swipes: {swipesUsed} / {weeklyLimit}
           </p>
 
-          <select
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-          >
+          <select value={location} onChange={(e) => setLocation(e.target.value)}>
             <option value="">Select Location</option>
             <option value="Fribley">Fribley</option>
             <option value="Leutner">Leutner</option>
@@ -58,13 +77,31 @@ const MealPlanPage = () => {
           />
 
           <button className="add-swipe-btn" onClick={handleAddSwipe}>
-            Add Swipe
+            {editIndex !== null ? "Save Changes" : "Add Swipe"}
           </button>
+
+          {editIndex !== null && (
+            <button className="delete-swipe-btn" onClick={handleDelete}>
+              Delete Swipe
+            </button>
+          )}
         </div>
 
-        {/* RIGHT CARD HISTORY */}
         <div className="history-card">
-          <h2>Swipe History</h2>
+          <div className="history-header">
+            <h2>Swipe History</h2>
+            <button
+              className="edit-mode-btn"
+              onClick={() => {
+                setEditMode(!editMode);
+                setEditIndex(null);
+                setLocation("");
+                setNotes("");
+              }}
+            >
+              {editMode ? "Done Editing" : "Edit"}
+            </button>
+          </div>
 
           <div className="history-table-container">
             <table className="history-table">
@@ -76,10 +113,13 @@ const MealPlanPage = () => {
                   <th>Notes</th>
                 </tr>
               </thead>
-
               <tbody>
                 {swipeHistory.map((s, i) => (
-                  <tr key={i}>
+                  <tr
+                    key={i}
+                    className={editMode ? "row-editable" : ""}
+                    onClick={() => beginEdit(i)}
+                  >
                     <td>{s.date}</td>
                     <td>{s.time}</td>
                     <td>{s.location}</td>
@@ -89,7 +129,6 @@ const MealPlanPage = () => {
               </tbody>
             </table>
           </div>
-
         </div>
       </div>
     </div>
