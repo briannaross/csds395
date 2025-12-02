@@ -1,6 +1,5 @@
 @import "./transactions.css";
 
-/* Additional styling for the Edit button */
 .edit-btn {
   background-color: #f4a93b;
   border: none;
@@ -17,7 +16,6 @@
   background-color: #d98a1f;
 }
 
-/* Delete button (red) */
 .delete-btn {
     background-color: #d9534f;
     border: none;
