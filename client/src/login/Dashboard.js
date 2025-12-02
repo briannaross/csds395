@@ -15,14 +15,17 @@ import {
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend);
 
-
 function Dashboard() {
   const navigate = useNavigate();
-  const { transactions, balances } = useContext(BudgetContext);
+  const { transactions, balances, caseCashEntries = [] } = useContext(BudgetContext);
+
+  // Calculate total CaseCash spent
+  const totalCaseCashSpent = caseCashEntries.reduce((sum, entry) => {
+    return sum + parseFloat(entry.amount || 0);
+  }, 0);
 
   return (
     <div className="dashboard-page">
-
       <header className="dashboard-header">
         <h1 className="header-title">Dashboard</h1>
         <button className="logout-btn" onClick={() => navigate("/")}>
@@ -33,7 +36,7 @@ function Dashboard() {
       <main className="dashboard-content">
         <div className="balances-row centered-balances">
           <div className="balance-card casecash">
-            CaseCash: <strong>${balances.caseCash.toFixed(2)}</strong>
+            CaseCash: <strong>${totalCaseCashSpent.toFixed(2)}</strong>
           </div>
           <div className="balance-card personal">
             Personal Funds: <strong>${balances.personalFunds.toFixed(2)}</strong>
@@ -41,34 +44,32 @@ function Dashboard() {
         </div>
 
         <div className="main-panels">
-
           <div className="chart-panel">
             <h2>Weekly Spending Trend</h2>
-  {transactions.length === 0 ? (
-    <p className="no-data">No data yet.</p>
-  ) : (
-    <Line
-      data={{
-        labels: transactions.slice(-7).map((t) => t.date),
-        datasets: [
-          {
-            label: "Spending ($)",
-            data: transactions.slice(-7).map((t) =>
-              t.type === "Expense" ? t.amount : 0
-            ),
-            borderColor: "#244b9b",
-            backgroundColor: "rgba(36, 75, 155, 0.2)",
-            fill: true,
-          },
-        ],
-      }}
-      options={{
-        responsive: true,
-        scales: { y: { beginAtZero: true } },
-      }}
-    />
-  )}
-
+            {transactions.length === 0 ? (
+              <p className="no-data">No data yet.</p>
+            ) : (
+              <Line
+                data={{
+                  labels: transactions.slice(-7).map((t) => t.date),
+                  datasets: [
+                    {
+                      label: "Spending ($)",
+                      data: transactions.slice(-7).map((t) =>
+                        t.type === "Expense" ? t.amount : 0
+                      ),
+                      borderColor: "#244b9b",
+                      backgroundColor: "rgba(36, 75, 155, 0.2)",
+                      fill: true,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  scales: { y: { beginAtZero: true } },
+                }}
+              />
+            )}
           </div>
 
           <div className="table-panel">
@@ -113,6 +114,12 @@ function Dashboard() {
               onClick={() => navigate("/transactions")}
             >
               View Full Transactions
+            </button>
+            <button
+              className="view-more-btn"
+              onClick={() => navigate("/casecash")}
+            >
+              View CaseCash History
             </button>
           </div>
         </div>
