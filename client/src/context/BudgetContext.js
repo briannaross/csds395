@@ -12,9 +12,7 @@ export const BudgetProvider = ({ children }) => {
     personalFunds: 0,
   });
 
-  // --------------------------
-  // PERSONAL FUNDS TRANSACTIONS
-  // --------------------------
+
   const addTransaction = (transaction) => {
     setTransactions((prev) => [...prev, transaction]);
 
@@ -33,9 +31,6 @@ export const BudgetProvider = ({ children }) => {
     });
   };
 
-  // --------------------------
-  // CASECASH FUNCTIONS
-  // --------------------------
   const addCaseCashEntry = (entry) => {
     setCaseCashEntries((prev) => [...prev, entry]);
   };
