@@ -1,51 +1,50 @@
 package com.cwru.budgetbot;
 
-import java.util.Objects;
-
 public class PurchaseQuery {
-    private final IntentType intent;
-    private final String merchant; // normalized or "Unknown"
-    private final Double amount;   // nullable if not found
-    private final SourceType source; // inferred from text if possible
-    private final String original;
 
-    public PurchaseQuery(IntentType intent, String merchant, Double amount, SourceType source, String original) {
+    private final IntentType intent;
+    private final String merchant;
+    private final Double amount;
+    private final SourceType source;
+    private final String originalText;
+    private final boolean cheapPreference;
+
+    public PurchaseQuery(IntentType intent,
+                         String merchant,
+                         Double amount,
+                         SourceType source,
+                         String originalText,
+                         boolean cheapPreference) {
         this.intent = intent;
         this.merchant = merchant;
         this.amount = amount;
         this.source = source;
-        this.original = original;
+        this.originalText = originalText;
+        this.cheapPreference = cheapPreference;
     }
 
-    public IntentType getIntent() { return intent; }
-    public String getMerchant() { return merchant; }
-    public Double getAmount() { return amount; }
-    public SourceType getSource() { return source; }
-    public String getOriginal() { return original; }
-
-    @Override
-    public String toString() {
-        return "PurchaseQuery{" +
-                "intent=" + intent +
-                ", merchant='" + merchant + '\'' +
-                ", amount=" + amount +
-                ", source=" + source +
-                ", original='" + original + '\'' +
-                '}';
+    public IntentType getIntent() {
+        return intent;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof PurchaseQuery other)) return false;
-        return intent == other.intent &&
-                Objects.equals(merchant, other.merchant) &&
-                Objects.equals(amount, other.amount) &&
-                source == other.source &&
-                Objects.equals(original, other.original);
+    public String getMerchant() {
+        return merchant;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(intent, merchant, amount, source, original);
+    public Double getAmount() {
+        return amount;
+    }
+
+    public SourceType getSource() {
+        return source;
+    }
+
+    public String getOriginalText() {
+        return originalText;
+    }
+
+    /** True if the user explicitly asked for something cheap / affordable. */
+    public boolean isCheapPreference() {
+        return cheapPreference;
     }
 }
