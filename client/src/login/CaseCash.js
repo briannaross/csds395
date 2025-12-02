@@ -5,7 +5,7 @@ import { BudgetContext } from "../context/BudgetContext";
 
 function CaseCash() {
   const {
-    caseCashEntries = [], // Add default empty array as fallback
+    caseCashEntries = [], 
     addCaseCashEntry,
     editCaseCashEntry,
     deleteCaseCashEntry,
@@ -42,7 +42,7 @@ function CaseCash() {
   function beginEdit(index) {
     if (!editMode) return;
     setEditIndex(index);
-    setForm({ ...caseCashEntries[index] }); // Spread to create a copy
+    setForm({ ...caseCashEntries[index] }); 
   }
 
   function handleDelete() {
