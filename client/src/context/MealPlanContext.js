@@ -2,7 +2,7 @@ import { createContext, useState, useEffect } from "react";
 
 export const MealPlanContext = createContext();
 
-export const MealPlanProvider = ({ user, children }) => {
+export const MealPlanProvider = ({ user = null, children }) => {
   const storageKey = user && user.email ? `meal_swipes_${user.email}` : "meal_swipes_guest";
 
   const [weeklyLimit, setWeeklyLimit] = useState(19);
@@ -20,10 +20,7 @@ export const MealPlanProvider = ({ user, children }) => {
   }, [storageKey]);
 
   const save = (updated) => {
-    localStorage.setItem(
-      storageKey,
-      JSON.stringify(updated)
-    );
+    localStorage.setItem(storageKey, JSON.stringify(updated));
   };
 
   const addSwipe = (location, notes) => {
@@ -47,13 +44,46 @@ export const MealPlanProvider = ({ user, children }) => {
     save(updated);
   };
 
+  const editSwipe = (index, location, notes) => {
+    const updatedHistory = [...swipeHistory];
+    updatedHistory[index] = {
+      ...updatedHistory[index],
+      location,
+      notes: notes || "-"
+    };
+
+    const updated = {
+      weeklyLimit,
+      swipesUsed,
+      swipeHistory: updatedHistory
+    };
+
+    setSwipeHistory(updatedHistory);
+    save(updated);
+  };
+
+  const deleteSwipe = (index) => {
+    const updatedHistory = swipeHistory.filter((_, i) => i !== index);
+    const updated = {
+      weeklyLimit,
+      swipesUsed: swipesUsed - 1,
+      swipeHistory: updatedHistory
+    };
+
+    setSwipeHistory(updatedHistory);
+    setSwipesUsed(swipesUsed - 1);
+    save(updated);
+  };
+
   return (
     <MealPlanContext.Provider
       value={{
         weeklyLimit,
         swipesUsed,
         swipeHistory,
-        addSwipe
+        addSwipe,
+        editSwipe,
+        deleteSwipe
       }}
     >
       {children}
