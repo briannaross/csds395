@@ -17,7 +17,7 @@ public class MerchantLexicon {
                      boolean diningHall) {
             this.canonicalName = canonicalName;
             this.normalizedAliases = aliases.stream()
-                    .map(NameNormalizer::normalize)
+                    .map(Normalizer::normalize)
                     .collect(Collectors.toList());
             this.onCampus = onCampus;
             this.diningHall = diningHall;
@@ -100,7 +100,7 @@ public class MerchantLexicon {
         if (text == null || text.isBlank()) {
             return Optional.empty();
         }
-        String normalized = NameNormalizer.normalize(text);
+        String normalized = Normalizer.normalize(text);
 
         Entry best = null;
         for (Entry e : entries) {
