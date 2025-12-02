@@ -11,24 +11,33 @@ public class AssistantController {
 
     private final IntentParser parser = new IntentParser();
     private final BudgetBotResponder responder = new BudgetBotResponder();
+    private final DecisionEngine decisionEngine = new DecisionEngine();
 
     @PostMapping("/ask")
-    public ResponseEntity<?> ask(@RequestBody Map<String, Object> body) {
-        String question = (String) body.getOrDefault("question", "");
-        // later you can also accept userId, week info, etc.
+    public ResponseEntity<?> ask(@RequestBody AssistantRequest req) {
+        String question = req.getQuestion() != null ? req.getQuestion() : "";
 
+        // 1) Parse natural language into PurchaseQuery
         PurchaseQuery q = parser.parse(question);
-        BudgetBotResponder.ResponseBundle bundle = responder.draftResponses(q);
 
-        // For now, return all three scenarios so the front-end can show them.
+        // 2) Build snapshot from JSON fields
+        BudgetSnapshot snapshot = BudgetSnapshot.fromRequest(req);
+
+        // 3) Decide YES / CAUTION / NO
+        Decision decision = decisionEngine.decide(q, snapshot);
+
+        // 4) Pick the single best response string
+        String message = responder.pickResponse(q, decision);
+
+        // 5) Return structured info + chosen message
         return ResponseEntity.ok(Map.of(
                 "intent", q.getIntent().name(),
                 "merchant", q.getMerchant(),
                 "amount", q.getAmount(),
                 "source", q.getSource().name(),
-                "yes", bundle.yes,
-                "caution", bundle.caution,
-                "no", bundle.no
+                "decision", decision.name(),
+                "message", message
         ));
     }
 }
+
