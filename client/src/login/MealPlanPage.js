@@ -5,7 +5,7 @@ import "./MealPlanPage.css";
 
 const MealPlanPage = () => {
   const navigate = useNavigate();
-  const { weeklyLimit, swipesUsed, swipeHistory, addSwipe, editSwipe, deleteSwipe } =
+  const { weeklyLimit, setWeeklyLimit, swipesUsed, swipeHistory, addSwipe, editSwipe, deleteSwipe } =
     useContext(MealPlanContext);
 
   const [location, setLocation] = useState("");
@@ -45,6 +45,11 @@ const MealPlanPage = () => {
     setEditMode(false);
   };
 
+  const handleLimitChange = (e) => {
+    const value = e.target.value;
+    setWeeklyLimit(value === "Unlimited" ? "Unlimited" : parseInt(value));
+  };
+
   return (
     <div className="meal-page">
       <div className="meal-header">
@@ -57,6 +62,22 @@ const MealPlanPage = () => {
       <div className="meal-content">
         <div className="add-swipe-card">
           <h2>{editIndex !== null ? "Edit Swipe" : "Add a Meal Swipe"}</h2>
+          
+          <div className="limit-selector">
+            <label htmlFor="weekly-limit">Weekly Meal Plan:</label>
+            <select 
+              id="weekly-limit"
+              value={weeklyLimit} 
+              onChange={handleLimitChange}
+              className="limit-dropdown"
+            >
+              <option value="10">10 Swipes/Week</option>
+              <option value="14">14 Swipes/Week</option>
+              <option value="17">17 Swipes/Week</option>
+              <option value="Unlimited">Unlimited</option>
+            </select>
+          </div>
+
           <p className="weekly-counter">
             Weekly Swipes: {swipesUsed} / {weeklyLimit}
           </p>
