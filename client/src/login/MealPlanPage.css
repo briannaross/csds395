@@ -1,4 +1,4 @@
-@import "./transactions.css";
+@import "./transactions.css"; 
 
 .meal-page {
   display: flex;
@@ -68,6 +68,41 @@
   color: #1e2d4d;
   margin-bottom: 1.2rem;
   font-weight: 700;
+}
+
+.limit-selector {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.limit-selector label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.limit-dropdown {
+  padding: 0.8rem;
+  border: 2px solid #244b9b;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #f8f9fc;
+  color: #244b9b;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.limit-dropdown:hover {
+  background-color: #e8ecf8;
+}
+
+.limit-dropdown:focus {
+  outline: none;
+  border-color: #173579;
+  background-color: white;
 }
 
 .weekly-counter {
