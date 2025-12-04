@@ -1,13 +1,22 @@
-@import "./transactions.css";
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background: #f4f7fb;
+  font-family: "Inter", sans-serif;
+  color: #333;
+  overflow-x: hidden;
+}
 
-.meal-page {
+.transactions-page {
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100vw;
 }
 
-.meal-header {
+.transactions-header {
   background-color: #244b9b;
   color: white;
   display: flex;
@@ -18,13 +27,13 @@
   box-sizing: border-box;
 }
 
-.meal-header h1 {
+.transactions-header h1 {
   font-size: 1.6rem;
   font-weight: 700;
   margin: 0;
 }
 
-.back-dashboard {
+.back-btn {
   background-color: white;
   color: #244b9b;
   border: none;
@@ -36,11 +45,11 @@
   transition: 0.2s;
 }
 
-.back-dashboard:hover {
+.back-btn:hover {
   background-color: #e8ecf8;
 }
 
-.meal-content {
+.transactions-main {
   flex: 1;
   display: grid;
   grid-template-columns: 45% 55%;
@@ -51,7 +60,7 @@
   box-sizing: border-box;
 }
 
-.add-swipe-card {
+.transactions-form-section {
   background: white;
   border-radius: 14px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
@@ -63,32 +72,45 @@
   box-sizing: border-box;
 }
 
-.add-swipe-card h2 {
+.transactions-form-section h2 {
   font-size: 1.3rem;
   color: #1e2d4d;
   margin-bottom: 1.2rem;
   font-weight: 700;
 }
 
-.weekly-counter {
-  font-weight: 600;
-  margin-bottom: 1.2rem;
-  color: #333;
-  font-size: 1rem;
+.transactions-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
 }
 
-.add-swipe-card select,
-.add-swipe-card input {
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group label {
+  font-weight: 600;
+}
+
+.transactions-form input,
+.transactions-form select,
+.transactions-form textarea {
   padding: 0.8rem;
   border: 1px solid #d0d5dd;
   border-radius: 6px;
   font-size: 1rem;
-  margin-bottom: 1rem;
-  width: 100%;
-  box-sizing: border-box;
 }
 
-.add-swipe-btn {
+.transactions-form textarea {
+  resize: none;
+  min-height: 70px;
+}
+
+.add-btn {
   margin-top: auto;
   background-color: #244b9b;
   color: white;
@@ -101,11 +123,11 @@
   transition: 0.2s;
 }
 
-.add-swipe-btn:hover {
+.add-btn:hover {
   background-color: #173579;
 }
 
-.delete-swipe-btn {
+.delete-inside-btn {
   background-color: #d9534f;
   color: white;
   border: none;
@@ -118,11 +140,11 @@
   margin-top: 0.5rem;
 }
 
-.delete-swipe-btn:hover {
+.delete-inside-btn:hover {
   background-color: #b52b27;
 }
 
-.history-card {
+.transactions-table-section {
   background: white;
   border-radius: 14px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
@@ -135,14 +157,14 @@
   box-sizing: border-box;
 }
 
-.history-header {
+.table-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
 }
 
-.history-card h2 {
+.table-header-row h2 {
   font-size: 1.3rem;
   color: #1e2d4d;
   font-weight: 700;
@@ -165,25 +187,20 @@
   background-color: #173579;
 }
 
-.history-table-container {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.history-table {
+.transactions-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.95rem;
 }
 
-.history-table th,
-.history-table td {
+.transactions-table th,
+.transactions-table td {
   text-align: left;
   padding: 0.8rem;
   border-bottom: 1px solid #e5e9f2;
 }
 
-.history-table th {
+.transactions-table th {
   background: #f1f4f9;
   font-weight: 600;
 }
@@ -197,7 +214,24 @@
   background-color: #f1f4f9;
 }
 
-.meal-footer {
+.positive {
+  color: #2e8b57;
+  font-weight: 600;
+}
+
+.negative {
+  color: #c0392b;
+  font-weight: 600;
+}
+
+.no-data {
+  text-align: center;
+  margin-top: 3rem;
+  color: #777;
+  font-size: 1rem;
+}
+
+.transactions-footer {
   text-align: center;
   padding: 1rem;
   font-size: 0.9rem;
@@ -208,13 +242,13 @@
 }
 
 @media (max-width: 1100px) {
-  .meal-content {
+  .transactions-main {
     grid-template-columns: 1fr;
     height: auto;
   }
 
-  .add-swipe-card,
-  .history-card {
+  .transactions-form-section,
+  .transactions-table-section {
     height: auto;
   }
 }
