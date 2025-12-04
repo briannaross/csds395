@@ -1,12 +1,17 @@
 package com.cwru.budgetbot;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/assistant")
+@CrossOrigin(origins = "http://localhost:3000")
 public class AssistantController {
 
     private final IntentParser parser = new IntentParser();
@@ -17,27 +22,21 @@ public class AssistantController {
     public ResponseEntity<?> ask(@RequestBody AssistantRequest req) {
         String question = req.getQuestion() != null ? req.getQuestion() : "";
 
-        // 1) Parse natural language into PurchaseQuery
         PurchaseQuery q = parser.parse(question);
 
-        // 2) Build snapshot from JSON fields
         BudgetSnapshot snapshot = BudgetSnapshot.fromRequest(req);
 
-        // 3) Decide YES / CAUTION / NO
         Decision decision = decisionEngine.decide(q, snapshot);
 
-        // 4) Pick the single best response string
         String message = responder.pickResponse(q, decision);
 
-        // 5) Return structured info + chosen message
         return ResponseEntity.ok(Map.of(
-                "intent", q.getIntent().name(),
-                "merchant", q.getMerchant(),
-                "amount", q.getAmount(),
-                "source", q.getSource().name(),
-                "decision", decision.name(),
-                "message", message
+                "intent", q.getIntent() != null ? q.getIntent().name() : "UNKNOWN",
+                "merchant", q.getMerchant() != null ? q.getMerchant() : "Unknown",
+                "amount", q.getAmount() != null ? q.getAmount() : 0.0,
+                "source", q.getSource() != null ? q.getSource().name() : "UNKNOWN",
+                "decision", decision != null ? decision.name() : "CAUTION",
+                "message", message != null ? message : "I couldn't process that request."
         ));
     }
 }
-
