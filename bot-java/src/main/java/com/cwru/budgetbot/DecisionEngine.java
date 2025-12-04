@@ -2,7 +2,6 @@ package com.cwru.budgetbot;
 
 public class DecisionEngine {
 
-    // Assumed semester length in weeks
     private static final int SEMESTER_WEEKS = 15;
 
     public Decision decide(PurchaseQuery q, BudgetSnapshot snapshot) {
@@ -10,19 +9,24 @@ public class DecisionEngine {
             return Decision.CAUTION;
         }
 
-        switch (q.getSource()) {
+        SourceType src = q.getSource();
+        if (src == null) {
+            src = SourceType.UNKNOWN;
+        }
+
+        switch (src) {
             case MEAL_SWIPE:
                 return decideForMealSwipe(snapshot);
             case CASE_CASH:
-                return decideForCaseCash(snapshot);
+                return decideForCaseCash(q, snapshot);
             case PERSONAL:
             case UNKNOWN:
             default:
-                return decideForPersonal(snapshot);
+                return decideForPersonal(q, snapshot);
         }
     }
 
-    private Decision decideForPersonal(BudgetSnapshot s) {
+    private Decision decideForPersonal(PurchaseQuery q, BudgetSnapshot s) {
         Double weeklyBudget = s.getWeeklyBudgetPersonal();
         Double spent = s.getSpentThisWeekPersonal();
 
@@ -30,18 +34,25 @@ public class DecisionEngine {
             return Decision.CAUTION;
         }
 
-        double ratio = spent / weeklyBudget;
+        Double amt = q.getAmount();
+        double ratioAfter;
 
-        if (ratio < 0.6) {
+        if (amt != null && amt > 0) {
+            ratioAfter = (spent + amt) / weeklyBudget;
+        } else {
+            ratioAfter = spent / weeklyBudget;
+        }
+
+        if (ratioAfter < 0.6) {
             return Decision.YES;
-        } else if (ratio < 0.9) {
+        } else if (ratioAfter < 0.9) {
             return Decision.CAUTION;
         } else {
             return Decision.NO;
         }
     }
 
-    private Decision decideForCaseCash(BudgetSnapshot s) {
+    private Decision decideForCaseCash(PurchaseQuery q, BudgetSnapshot s) {
         Double totalSemester = s.getCaseCashTotalSemester();
         Double spentThisWeek = s.getCaseCashSpentThisWeek();
 
@@ -54,12 +65,21 @@ public class DecisionEngine {
             return Decision.CAUTION;
         }
 
-        double ratio = spentThisWeek / idealPerWeek;
+        Double amt = q.getAmount();
+        double ratioCurrent = spentThisWeek / idealPerWeek;
+        double ratioAfter = ratioCurrent;
 
-        // Same thresholds: <60% → YES, 60–90% → CAUTION, >90% → NO
-        if (ratio < 0.6) {
+        if (amt != null && amt > 0) {
+            ratioAfter = (spentThisWeek + amt) / idealPerWeek;
+        }
+
+        // More forgiving thresholds for CaseCash:
+        // < 0.85 of weekly pace → YES
+        // 0.85–1.10 → CAUTION
+        // > 1.10 → NO
+        if (ratioAfter < 0.85) {
             return Decision.YES;
-        } else if (ratio < 0.9) {
+        } else if (ratioAfter < 1.10) {
             return Decision.CAUTION;
         } else {
             return Decision.NO;
@@ -82,11 +102,11 @@ public class DecisionEngine {
         }
 
         if (ratioUsed < 0.6) {
-            return Decision.YES;     // plenty of swipes left
+            return Decision.YES;     // plenty left
         } else if (ratioUsed < 0.9) {
             return Decision.CAUTION; // getting tight
         } else {
-            return Decision.NO;      // too few swipes left
+            return Decision.NO;      // very few left
         }
     }
 }
