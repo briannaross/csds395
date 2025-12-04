@@ -62,33 +62,46 @@ public class IntentParser {
         SourceType source = SourceType.UNKNOWN;
 
         boolean mentionsSwipe = swipe.mentionsSwipe(text);
+        boolean mentionsCaseCash =
+                lower.contains("case cash") || lower.contains("casecash");
 
-        // Dining hall logic: if they explicitly say "swipe" → MEAL_SWIPE
-        // If they give a dollar amount → treat as money (CaseCash by default)
-        // Else → default to MEAL_SWIPE
+        boolean mentionsPersonalCard =
+                lower.contains("personal")
+                        || lower.contains("my card")
+                        || lower.contains("credit")
+                        || lower.contains("debit")
+                        || lower.contains("visa")
+                        || lower.contains("mastercard");
+
+        // ---- Dining hall handling ----
         if (isDiningHall) {
             if (mentionsSwipe && !hasAmount) {
+                // explicitly talking about swipes
                 source = SourceType.MEAL_SWIPE;
+            } else if (mentionsCaseCash) {
+                // explicitly CaseCash at dining hall
+                source = SourceType.CASE_CASH;
             } else if (hasAmount) {
-                source = SourceType.CASE_CASH;   // dining hall but paying with money
+                // dollar amount mentioned at dining hall → treat as money purchase,
+                // defaulting to PERSONAL unless they said CaseCash above
+                source = SourceType.PERSONAL;
             } else {
-                source = SourceType.MEAL_SWIPE;  // generic "dining hall" question
+                // generic "dining hall" question (no amount, no explicit cash type)
+                source = SourceType.MEAL_SWIPE;
             }
-        } else if (mentionsSwipe) {
-            source = SourceType.MEAL_SWIPE;
-        }
+        } else {
+            // ---- Non–dining-hall handling ----
 
-        // If we still haven't decided and it's clearly on-campus, prefer CaseCash
-        if (source != SourceType.MEAL_SWIPE) {
-            if (lower.contains("case cash") || lower.contains("casecash")) {
+            if (mentionsSwipe) {
+                // Some on-campus places can take mobile swipes
+                source = SourceType.MEAL_SWIPE;
+            } else if (mentionsCaseCash) {
+                // Only use CaseCash when explicitly requested
                 source = SourceType.CASE_CASH;
-            } else if (match.map(m -> m.entry.onCampus()).orElse(false)) {
-                // e.g., Starbucks on campus → default CaseCash
-                source = SourceType.CASE_CASH;
-            } else if (lower.contains("personal") || lower.contains("credit")
-                    || lower.contains("debit") || lower.contains("my card")) {
+            } else if (mentionsPersonalCard) {
                 source = SourceType.PERSONAL;
             }
+            // otherwise we leave source as UNKNOWN for now and will default later
         }
 
         // 5) cheap preference flag (for cheap recs)
@@ -97,6 +110,11 @@ public class IntentParser {
         // 6) upgrade UNKNOWN intent to CAN_I_BUY if it still looks like a purchase
         if (intent == IntentType.UNKNOWN && (match.isPresent() || hasAmount || mentionsSwipe)) {
             intent = IntentType.CAN_I_BUY;
+        }
+
+        // 7) Final default: if still UNKNOWN, assume PERSONAL funds
+        if (source == SourceType.UNKNOWN) {
+            source = SourceType.PERSONAL;
         }
 
         return new PurchaseQuery(intent, merchant, amount, source, text, cheapPreference);
