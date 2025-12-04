@@ -5,7 +5,7 @@ import "./transactions.css";
 
 function Transactions() {
   const navigate = useNavigate();
-  const { transactions, addTransaction } = useContext(BudgetContext);
+  const { transactions, addTransaction, editTransaction, deleteTransaction } = useContext(BudgetContext);
 
   const [form, setForm] = useState({
     date: "",
@@ -15,6 +15,9 @@ function Transactions() {
     notes: "",
   });
 
+  const [editIndex, setEditIndex] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -23,8 +26,30 @@ function Transactions() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.amount || !form.category) return;
-    addTransaction(form);
+
+    if (editIndex !== null) {
+      editTransaction(editIndex, form);
+      setEditIndex(null);
+      setEditMode(false);
+    } else {
+      addTransaction(form);
+    }
+
     setForm({ date: "", category: "", type: "Expense", amount: "", notes: "" });
+  };
+
+  const beginEdit = (index) => {
+    if (!editMode) return;
+    setEditIndex(index);
+    setForm({ ...transactions[index] });
+  };
+
+  const handleDelete = () => {
+    if (editIndex === null) return;
+    deleteTransaction(editIndex);
+    setEditIndex(null);
+    setForm({ date: "", category: "", type: "Expense", amount: "", notes: "" });
+    setEditMode(false);
   };
 
   return (
@@ -37,9 +62,8 @@ function Transactions() {
       </header>
 
       <main className="transactions-main">
-  
         <section className="transactions-form-section">
-          <h2>Add a New Transaction</h2>
+          <h2>{editIndex !== null ? "Edit Transaction" : "Add a New Transaction"}</h2>
           <form className="transactions-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Date</label>
@@ -90,14 +114,32 @@ function Transactions() {
               />
             </div>
             <button type="submit" className="add-btn">
-              Add Transaction
+              {editIndex !== null ? "Save Changes" : "Add Transaction"}
             </button>
+
+            {editIndex !== null && (
+              <button type="button" className="delete-inside-btn" onClick={handleDelete}>
+                Delete Transaction
+              </button>
+            )}
           </form>
         </section>
 
-
         <section className="transactions-table-section">
-          <h2>Transaction History</h2>
+          <div className="table-header-row">
+            <h2>Transaction History</h2>
+            <button
+              className="edit-mode-btn"
+              onClick={() => {
+                setEditMode(!editMode);
+                setEditIndex(null);
+                setForm({ date: "", category: "", type: "Expense", amount: "", notes: "" });
+              }}
+            >
+              {editMode ? "Done Editing" : "Edit"}
+            </button>
+          </div>
+
           {transactions.length === 0 ? (
             <p className="no-data">No transactions recorded yet.</p>
           ) : (
@@ -113,15 +155,15 @@ function Transactions() {
               </thead>
               <tbody>
                 {transactions.map((t, index) => (
-                  <tr key={index}>
+                  <tr
+                    key={index}
+                    className={editMode ? "row-editable" : ""}
+                    onClick={() => beginEdit(index)}
+                  >
                     <td>{t.date}</td>
                     <td>{t.category}</td>
                     <td>{t.type}</td>
-                    <td
-                      className={
-                        t.type === "Income" ? "positive" : "negative"
-                      }
-                    >
+                    <td className={t.type === "Income" ? "positive" : "negative"}>
                       {parseFloat(t.amount).toFixed(2)}
                     </td>
                     <td>{t.notes}</td>
