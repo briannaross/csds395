@@ -147,4 +147,3 @@ public class BudgetBotApplication {
         }
         return sb.toString();
     }
-}
