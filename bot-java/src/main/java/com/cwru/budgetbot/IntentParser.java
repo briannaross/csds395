@@ -2,172 +2,99 @@ package com.cwru.budgetbot;
 
 import java.util.Locale;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
+import org.springframework.stereotype.Service;
+
+@Service
 public class IntentParser {
-    private final MerchantLexicon lexicon = new MerchantLexicon();
-    private final MoneyParser money = new MoneyParser();
-    private final SwipeParser swipe = new SwipeParser();
 
-    // "can I buy", "should I get", "is it okay if I spend"
-    private static final Pattern CAN_I_BUY =
-            Pattern.compile("(?:\\bcan|\\bshould).*(?:buy|get|spend)|\\bis it ok(?:ay)? if\\b",
-                    Pattern.CASE_INSENSITIVE);
+    private final MerchantLexicon lexicon;
+    private final MoneyParser moneyParser;
+    private final SwipeParser swipeParser;
 
-    // "how am I doing on my budget?"
-    private static final Pattern HOW_AM_I_DOING =
-            Pattern.compile("\\bhow\\b.*\\b(budget|spend|doing|pace|pacing)\\b",
-                    Pattern.CASE_INSENSITIVE);
-
-    // RECS: “where should I eat?”, “any food recommendations?”, “where can I get groceries?”
-    private static final Pattern RECS =
-            Pattern.compile(
-                    "(where should i (eat|go))"
-                            + "|(any (food|lunch|dinner|grocery|groceries) recommendations?)"
-                            + "|(what (do you )?recommend)"
-                            + "|(recommend (someplace|somewhere|a place))"
-                            + "|(suggest (a place|somewhere))"
-                            + "|(where can i (get|buy) (food|groceries|grocer?y))",
-                    Pattern.CASE_INSENSITIVE
-            );
+    public IntentParser(MerchantLexicon lexicon,
+                        MoneyParser moneyParser,
+                        SwipeParser swipeParser) {
+        this.lexicon = lexicon;
+        this.moneyParser = moneyParser;
+        this.swipeParser = swipeParser;
+    }
 
     public PurchaseQuery parse(String input) {
-        if (input == null || input.isBlank()) {
-            return new PurchaseQuery(
-                    IntentType.UNKNOWN,
-                    "Unknown",
-                    null,
-                    SourceType.UNKNOWN,
-                    "",
-                    false
-            );
-        }
-
         String text = input.trim();
         String lower = text.toLowerCase(Locale.ROOT);
 
-        // 1) intent
+        // 1) INTENT: rule-based only
         IntentType intent = detectIntent(lower);
 
-        // 2) merchant (canonical) via alias matching with normalization
+        // 2) MERCHANT: canonical name via lexicon lookup
         Optional<MerchantLexicon.Match> match = lexicon.find(text);
-        String merchant = match.map(m -> m.entry.canonicalName()).orElse("Unknown");
-        boolean isDiningHall = match.map(m -> m.entry.isDiningHall()).orElse(false);
+        // use lambda instead of method reference to avoid the compiler complaint
+        String merchant = match
+                .map(MerchantLexicon.Match::canonicalName)   // note the () via method ref
+                .orElse(null);
+        // ^ assumes Match has a public field canonicalName (which is how we had it earlier)
 
-        // 3) amount
-        Double amount = money.extractAmount(text);
-        boolean hasAmount = amount != null && amount > 0;
+        // 3) AMOUNT OF MONEY (if any)
+        MoneyParser.Result money = moneyParser.parse(lower);
+        Double amount = (money != null) ? money.amount : null;
 
-        // 4) source inference
-        SourceType source = SourceType.UNKNOWN;
+        // 4) SOURCE TYPE (PERSONAL / CASE_CASH / MEAL_SWIPE)
+        SourceType source = swipeParser.detectSource(lower, merchant, amount);
 
-        boolean mentionsSwipe = swipe.mentionsSwipe(text);
-        boolean mentionsCaseCash =
-                lower.contains("case cash") || lower.contains("casecash");
+        // 5) CHEAPNESS PREFERENCE
+        boolean cheapPreference =
+                lower.contains("cheap") ||
+                        lower.contains("tight budget") ||
+                        lower.contains("save money") ||
+                        lower.contains("broke");
 
-        boolean mentionsPersonalCard =
-                lower.contains("personal")
-                        || lower.contains("my card")
-                        || lower.contains("credit")
-                        || lower.contains("debit")
-                        || lower.contains("visa")
-                        || lower.contains("mastercard");
-
-        // ---- Dining hall handling ----
-        if (isDiningHall) {
-            if (mentionsSwipe && !hasAmount) {
-                // explicitly talking about swipes
-                source = SourceType.MEAL_SWIPE;
-            } else if (mentionsCaseCash) {
-                // explicitly CaseCash at dining hall
-                source = SourceType.CASE_CASH;
-            } else if (hasAmount) {
-                // dollar amount mentioned at dining hall → treat as money purchase,
-                // defaulting to PERSONAL unless they said CaseCash above
-                source = SourceType.PERSONAL;
-            } else {
-                // generic "dining hall" question (no amount, no explicit cash type)
-                source = SourceType.MEAL_SWIPE;
-            }
-        } else {
-            // ---- Non–dining-hall handling ----
-
-            if (mentionsSwipe) {
-                // Some on-campus places can take mobile swipes
-                source = SourceType.MEAL_SWIPE;
-            } else if (mentionsCaseCash) {
-                // Only use CaseCash when explicitly requested
-                source = SourceType.CASE_CASH;
-            } else if (mentionsPersonalCard) {
-                source = SourceType.PERSONAL;
-            }
-            // otherwise we leave source as UNKNOWN for now and will default later
-        }
-
-        // 5) cheap preference flag (for cheap recs)
-        boolean cheapPreference = detectCheapPreference(lower);
-
-        // 6) upgrade UNKNOWN intent to CAN_I_BUY if it still looks like a purchase
-        if (intent == IntentType.UNKNOWN && (match.isPresent() || hasAmount || mentionsSwipe)) {
-            intent = IntentType.CAN_I_BUY;
-        }
-
-        // 7) Final default: if still UNKNOWN, assume PERSONAL funds
-        if (source == SourceType.UNKNOWN) {
-            source = SourceType.PERSONAL;
-        }
-
-        return new PurchaseQuery(intent, merchant, amount, source, text, cheapPreference);
+        return new PurchaseQuery(
+                intent,
+                merchant,
+                amount,
+                source,
+                text,
+                cheapPreference
+        );
     }
+
+    // ----------------- helper for intent detection -----------------
 
     private IntentType detectIntent(String lower) {
-        // RECS first so "where can I get groceries?" isn't treated as CAN_I_BUY
-        if (RECS.matcher(lower).find()) return IntentType.RECS;
-        if (HOW_AM_I_DOING.matcher(lower).find()) return IntentType.HOW_AM_I_DOING;
-        if (CAN_I_BUY.matcher(lower).find()) return IntentType.CAN_I_BUY;
+        // status / “how am I doing” questions
+        if (lower.contains("how am i doing") ||
+                lower.contains("how'm i doing") ||
+                lower.contains("how am i doing on my budget") ||
+                lower.contains("on my budget") ||
+                lower.contains("on track") ||
+                lower.contains("over budget")) {
+            return IntentType.HOW_AM_I_DOING;
+        }
 
-        // heuristic fallback: generic food questions
-        if (looksLikeFoodRecs(lower)) return IntentType.RECS;
+        // recommendations
+        if (lower.contains("where should i eat") ||
+                lower.contains("where can i eat") ||
+                lower.contains("any recommendations") ||
+                lower.contains("what should i get for food") ||
+                lower.contains("where can i get groceries") ||
+                lower.contains("where can i get food") ||
+                lower.contains("somewhere cheap") ||
+                lower.contains("cheap place to eat")) {
+            return IntentType.RECS;
+        }
+
+        // “can I buy / spend” style questions
+        if (lower.startsWith("can i") ||
+                lower.startsWith("is it okay if") ||
+                lower.contains("okay to spend") ||
+                lower.contains("is it ok if i spend") ||
+                lower.contains("should i buy") ||
+                lower.contains("should i spend") ||
+                lower.contains("will i stay on track if i spend")) {
+            return IntentType.CAN_I_BUY;
+        }
 
         return IntentType.UNKNOWN;
-    }
-
-    private boolean looksLikeFoodRecs(String lower) {
-        boolean hasFoodWord =
-                lower.contains("food")
-                        || lower.contains("lunch")
-                        || lower.contains("dinner")
-                        || lower.contains("groceries")
-                        || lower.contains("grocery")
-                        || lower.contains("snack")
-                        || lower.contains("something to eat");
-
-        boolean hasLocationish =
-                lower.contains("somewhere")
-                        || lower.contains("some place")
-                        || lower.contains("someplace")
-                        || lower.contains("place to eat")
-                        || lower.contains("place to get");
-
-        boolean hasBudgetWord =
-                lower.contains("cheap")
-                        || lower.contains("affordable")
-                        || lower.contains("on a budget")
-                        || lower.contains("not too expensive")
-                        || lower.contains("broke");
-
-        return hasFoodWord && (hasLocationish || hasBudgetWord);
-    }
-
-    /** Detects when the user is explicitly asking for cheap/affordable options. */
-    private boolean detectCheapPreference(String lower) {
-        return lower.contains("cheap")
-                || lower.contains("affordable")
-                || lower.contains("on a budget")
-                || lower.contains("broke")
-                || lower.contains("not too expensive")
-                || lower.contains("low cost")
-                || lower.contains("budget friendly")
-                || lower.contains("inexpensive");
     }
 }
