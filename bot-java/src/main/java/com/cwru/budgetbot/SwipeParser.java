@@ -1,27 +1,34 @@
 package com.cwru.budgetbot;
 
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.springframework.stereotype.Service;
 
-/** Detects if the text refers to swipes; optional count if stated (e.g., "2 swipes"). */
+@Service
 public class SwipeParser {
-    private static final Pattern SWIPE_ANY = Pattern.compile(
-            "\\b(meal\\s*)?swipes?\\b", Pattern.CASE_INSENSITIVE);
-    private static final Pattern SWIPE_COUNT = Pattern.compile(
-            "\\b(\\d+)\\s*(meal\\s*)?swipes?\\b|x\\s*(\\d+)\\s*swipes?\\b", Pattern.CASE_INSENSITIVE);
 
-    public boolean mentionsSwipe(String text) {
-        return SWIPE_ANY.matcher(text).find();
-    }
+    public SourceType detectSource(String lower,
+                                   String merchant,
+                                   Double amount) {
 
-    public Optional<Integer> swipeCount(String text) {
-        Matcher m = SWIPE_COUNT.matcher(text);
-        if (m.find()) {
-            String g = m.group(1) != null ? m.group(1) : m.group(3);
-            try { return Optional.of(Integer.parseInt(g)); } catch (NumberFormatException ignore) {}
+        // explicit mentions first
+        if (lower.contains("casecash") || lower.contains("case cash")) {
+            return SourceType.CASE_CASH;
         }
-        return Optional.empty();
+        if (lower.contains("meal swipe") ||
+                lower.contains("swipe") && (lower.contains("dining") || lower.contains("meal"))) {
+            return SourceType.MEAL_SWIPE;
+        }
+
+        // dining halls default to swipes
+        if (merchant != null) {
+            String m = merchant.toLowerCase();
+            if (m.contains("dining hall") ||
+                    m.contains("north dining") ||
+                    m.contains("south dining")) {
+                return SourceType.MEAL_SWIPE;
+            }
+        }
+
+        // everything else → personal funds by default
+        return SourceType.PERSONAL;
     }
 }
-
