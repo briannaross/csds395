@@ -3,33 +3,49 @@ package com.cwru.budgetbot;
 import java.util.List;
 
 public class Main {
-    public static void main(String[] args) {
-        IntentParser parser = new IntentParser();
-        BudgetBotResponder responder = new BudgetBotResponder();
 
+    public static void main(String[] args) {
+        // Wire parsers for local testing
+        MerchantLexicon lexicon   = new MerchantLexicon();
+        MoneyParser    money      = new MoneyParser();
+        SwipeParser    swipe      = new SwipeParser();
+        IntentParser   parser     = new IntentParser(lexicon, money, swipe);
+
+        BudgetBotResponder responder   = new BudgetBotResponder();
+        DecisionEngine     decisionEngine = new DecisionEngine();
+
+        // ----- Sample budget snapshot for testing -----
+        BudgetSnapshot snapshot = new BudgetSnapshot(
+                80.0,   // weeklyBudgetPersonal
+                35.0,   // spentThisWeekPersonal
+                300.0,  // caseCashTotalSemester
+                15.0,   // caseCashSpentThisWeek
+                17,     // mealSwipesWeeklyTotal
+                5       // mealSwipesUsedThisWeek
+        );
+
+        // ----- Sample questions -----
         List<String> samples = List.of(
-            "I want to get ice cream at Mitchell's today",
-            "can I buy starbucks for $7?",
-            "is it ok if I spend 12 dollars at the dining hall?",
-            "should I use a swipe at dining?",
-            "grabbing chipotle for about 9 bucks on my personal card",
-            "how am I doing on my budget this week?",
-            "explain your recommendation about coffee",
-            "mitchells for 6?",
-            "on campus lunch swipe?",
-            "case cash coffee at stbx",
-            "i want to get food somewhere cheap"
+                "Can I get Starbucks for $5?",
+                "Is it ok to get Chipotle for 12 dollars?",
+                "How am I doing on my budget this week?",
+                "Where can I get groceries?",
+                "I want to get food somewhere cheap"
         );
 
         for (String s : samples) {
             PurchaseQuery q = parser.parse(s);
-            BudgetBotResponder.ResponseBundle r = responder.draftResponses(q);
+            Decision decision = decisionEngine.decide(q, snapshot);
+            String message = responder.pickResponse(q, decision);
 
             System.out.println("USER: " + s);
-            System.out.println(r.yes);
-            System.out.println(r.caution);
-            System.out.println(r.no);
-            System.out.println();
+            System.out.println("Intent: " + q.getIntent());
+            System.out.println("Merchant: " + q.getMerchant());
+            System.out.println("Amount: " + q.getAmount());
+            System.out.println("Source: " + q.getSource());
+            System.out.println("Decision: " + decision);
+            System.out.println("BOT: " + message);
+            System.out.println("----");
         }
     }
 }
