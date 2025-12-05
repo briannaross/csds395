@@ -1,26 +1,38 @@
 package com.cwru.budgetbot;
 
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.stereotype.Service;
 
+@Service
 public class MoneyParser {
-    // $6.75, 6.75, $7, 7, "4 bucks", "12 dollars", "about 5"
-    private static final Pattern AMOUNT = Pattern.compile(
-            "(?:about|around|approx(?:\\.?)|~)?\\s*(?:\\$\\s*)?([0-9]+(?:\\.[0-9]{1,2})?)\\b|\\b([0-9]+)\\s*(?:bucks|dollars?)\\b",
-            Pattern.CASE_INSENSITIVE
-    );
 
-    public Double extractAmount(String text) {
-        Matcher m = AMOUNT.matcher(text);
-        if (m.find()) {
-            String a = m.group(1) != null ? m.group(1) : m.group(2);
-            try { return Double.parseDouble(a); } catch (NumberFormatException ignore) {}
+    // Matches things like "$5", "$5.25", "5 dollars", "5 bucks"
+    private static final Pattern MONEY_PATTERN =
+            Pattern.compile("(\\$?)(\\d+(?:\\.\\d{1,2})?)\\s*(dollars?|bucks?)?",
+                    Pattern.CASE_INSENSITIVE);
+
+    public static class Result {
+        public final Double amount;
+        public final String rawText;
+
+        public Result(Double amount, String rawText) {
+            this.amount = amount;
+            this.rawText = rawText;
         }
-        // soft fallbacks by phrase (tune as needed)
-        String lower = text.toLowerCase(Locale.ROOT);
-        if (lower.contains("a coffee")) return 4.00;
-        if (lower.contains("ice cream")) return 6.75;
+    }
+
+    public Result parse(String text) {
+        Matcher m = MONEY_PATTERN.matcher(text);
+        if (m.find()) {
+            String numberPart = m.group(2);
+            try {
+                double value = Double.parseDouble(numberPart);
+                return new Result(value, m.group(0));
+            } catch (NumberFormatException e) {
+                // fall through
+            }
+        }
         return null;
     }
 }
