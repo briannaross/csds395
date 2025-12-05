@@ -1,0 +1,5 @@
+# Ignore local environment configuration (contains API key)
+src/main/resources/application.properties
+
+# Ignore build artifacts
+target/
