@@ -1,45 +1,92 @@
 package com.cwru.budgetbot;
 
+/**
+ * Snapshot of a student's budget state for one week.
+ * Includes:
+ *  - personal weekly budget + spent
+ *  - CaseCash totals and this week's CaseCash spending
+ *  - meal swipe totals and swipes used this week
+ */
 public class BudgetSnapshot {
 
-    private final Double weeklyBudgetPersonal;
-    private final Double spentThisWeekPersonal;
+    private final double weeklyBudgetPersonal;
+    private final double spentThisWeekPersonal;
 
-    private final Double caseCashTotalSemester;
-    private final Double caseCashSpentThisWeek;
+    private final double caseCashTotalSemester;
+    private final double caseCashSpentThisWeek;
 
-    private final Integer mealSwipesWeeklyTotal;
-    private final Integer mealSwipesUsedThisWeek;
+    private final int mealSwipesWeeklyTotal;
+    private final int mealSwipesUsedThisWeek;
 
-    public BudgetSnapshot(Double weeklyBudgetPersonal,
-                          Double spentThisWeekPersonal,
-                          Double caseCashTotalSemester,
-                          Double caseCashSpentThisWeek,
-                          Integer mealSwipesWeeklyTotal,
-                          Integer mealSwipesUsedThisWeek) {
-        this.weeklyBudgetPersonal = weeklyBudgetPersonal;
-        this.spentThisWeekPersonal = spentThisWeekPersonal;
-        this.caseCashTotalSemester = caseCashTotalSemester;
-        this.caseCashSpentThisWeek = caseCashSpentThisWeek;
-        this.mealSwipesWeeklyTotal = mealSwipesWeeklyTotal;
+    public BudgetSnapshot(double weeklyBudgetPersonal,
+                          double spentThisWeekPersonal,
+                          double caseCashTotalSemester,
+                          double caseCashSpentThisWeek,
+                          int mealSwipesWeeklyTotal,
+                          int mealSwipesUsedThisWeek) {
+        this.weeklyBudgetPersonal   = weeklyBudgetPersonal;
+        this.spentThisWeekPersonal  = spentThisWeekPersonal;
+        this.caseCashTotalSemester  = caseCashTotalSemester;
+        this.caseCashSpentThisWeek  = caseCashSpentThisWeek;
+        this.mealSwipesWeeklyTotal  = mealSwipesWeeklyTotal;
         this.mealSwipesUsedThisWeek = mealSwipesUsedThisWeek;
     }
 
-    public static BudgetSnapshot fromRequest(AssistantRequest req) {
+    /** Demo snapshot so controller / Main always have safe, non-null data. */
+    public static BudgetSnapshot demo() {
+        // Example numbers: tune these if you want different behavior.
         return new BudgetSnapshot(
-                req.getWeeklyBudgetPersonal(),
-                req.getSpentThisWeekPersonal(),
-                req.getCaseCashTotalSemester(),
-                req.getCaseCashSpentThisWeek(),
-                req.getMealSwipesWeeklyTotal(),
-                req.getMealSwipesUsedThisWeek()
+                80.0,   // weeklyBudgetPersonal
+                35.0,   // spentThisWeekPersonal
+                300.0,  // caseCashTotalSemester
+                40.0,   // caseCashSpentThisWeek
+                17,     // mealSwipesWeeklyTotal
+                6       // mealSwipesUsedThisWeek
         );
     }
 
-    public Double getWeeklyBudgetPersonal()         { return weeklyBudgetPersonal; }
-    public Double getSpentThisWeekPersonal()        { return spentThisWeekPersonal; }
-    public Double getCaseCashTotalSemester()        { return caseCashTotalSemester; }
-    public Double getCaseCashSpentThisWeek()        { return caseCashSpentThisWeek; }
-    public Integer getMealSwipesWeeklyTotal()       { return mealSwipesWeeklyTotal; }
-    public Integer getMealSwipesUsedThisWeek()      { return mealSwipesUsedThisWeek; }
+    // --- PERSONAL ---
+
+    public double getWeeklyBudgetPersonal() {
+        return weeklyBudgetPersonal;
+    }
+
+    public double getSpentThisWeekPersonal() {
+        return spentThisWeekPersonal;
+    }
+
+    // Convenience methods used by older code:
+    public double getWeeklyBudget() {
+        return weeklyBudgetPersonal;
+    }
+
+    public double getSpentThisWeek() {
+        return spentThisWeekPersonal;
+    }
+
+    // --- CASECASH ---
+
+    public double getCaseCashTotalSemester() {
+        return caseCashTotalSemester;
+    }
+
+    public double getCaseCashSpentThisWeek() {
+        return caseCashSpentThisWeek;
+    }
+
+    // Rough “per week” CaseCash budget, assuming ~15-week semester.
+    public double getCaseCashWeeklyBudgetApprox() {
+        if (caseCashTotalSemester <= 0) return 0.0;
+        return caseCashTotalSemester / 15.0;
+    }
+
+    // --- MEAL SWIPES ---
+
+    public int getMealSwipesWeeklyTotal() {
+        return mealSwipesWeeklyTotal;
+    }
+
+    public int getMealSwipesUsedThisWeek() {
+        return mealSwipesUsedThisWeek;
+    }
 }
