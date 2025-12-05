@@ -1,0 +1,5 @@
+# OpenAI API Key — REQUIRED for full AI functionality
+openai.api.key=YOUR_API_KEY_HERE
+
+# Server settings
+server.port=8080
