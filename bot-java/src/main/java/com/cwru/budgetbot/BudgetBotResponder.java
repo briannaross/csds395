@@ -1,5 +1,8 @@
 package com.cwru.budgetbot;
 
+import org.springframework.stereotype.Service;
+
+@Service
 public class BudgetBotResponder {
 
     public static class ResponseBundle {
